@@ -161,9 +161,27 @@ function ns.Send(slice, text)
     return
   end
   local send = (C_ChatInfo and C_ChatInfo.SendChatMessage) or SendChatMessage
-  local ok, err = pcall(send, text, slice.kind == "say" and "SAY" or "EMOTE")
+  local channel = slice.kind == "say" and "SAY" or "EMOTE"
+  if ns.debug then ns.Print(("sending %s: %s"):format(channel, text)) end
+  ns.lastSent = { text = text, channel = channel, t = GetTime() }
+  local ok, err = pcall(send, text, channel)
   if not ok then ns.Print("couldn't send that: " .. tostring(err)) end
 end
+
+-- the game silently refuses some actions; say so, and hand the line over
+-- in the chat box so one Enter press sends it
+local blocked = CreateFrame("Frame")
+blocked:RegisterEvent("ADDON_ACTION_BLOCKED")
+blocked:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+blocked:SetScript("OnEvent", function(_, event, addon, func)
+  if addon ~= ADDON then return end
+  ns.Print(("the game blocked %s (%s)."):format(tostring(func), event == "ADDON_ACTION_FORBIDDEN" and "forbidden" or "blocked"))
+  local last = ns.lastSent
+  if last and GetTime() - last.t < 1 and ChatFrame_OpenChat then
+    ChatFrame_OpenChat((last.channel == "SAY" and "/s " or "/e ") .. last.text)
+    ns.Print("your line is in the chat box, press Enter to send it.")
+  end
+end)
 
 ------------------------------------------------------------------------
 -- Rings

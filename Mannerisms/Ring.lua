@@ -24,6 +24,23 @@ catcher:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 catcher:EnableMouse(true)
 catcher:Hide()
 
+-- out of combat, clicks go to a secure button instead: the game only lets a
+-- click post a /me or /say line when it runs as a macro (OPie does the same)
+local secure = CreateFrame("Button", "MannerismsClick", UIParent, "SecureActionButtonTemplate")
+secure:SetAllPoints(UIParent)
+secure:SetFrameStrata("FULLSCREEN_DIALOG")
+secure:SetFrameLevel(250)
+secure:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+secure:Hide()
+
+local function ClickLayerOn()
+  if InCombatLockdown() then catcher:Show() else catcher:Hide() secure:Show() end
+end
+local function ClickLayerOff()
+  catcher:Hide()
+  if not InCombatLockdown() then secure:Hide() end
+end
+
 local function Round(parent, layer, size, r, g, b, a, sub)
   local t = parent:CreateTexture(nil, layer, nil, sub)
   t:SetSize(size, size)
@@ -196,14 +213,14 @@ local function Close()
 end
 
 ring:SetScript("OnHide", function()
-  catcher:Hide()
+  ClickLayerOff()
   cur, sticky, hover, pending = nil, false, nil, nil
   wipe(stack)
 end)
 
 local function MakeSticky()
   sticky = true
-  catcher:Show()
+  ClickLayerOn()
   hint:SetText(#stack > 0 and "right-click: back" or "click a slice")
 end
 
@@ -300,6 +317,44 @@ function ns.RingClick(button, idx)
   if target then ns.Safe(Activate, target) else Close() end
 end
 catcher:SetScript("OnClick", function(_, button) ns.RingClick(button, nil) end)
+
+-- before the secure click runs: point it at the hovered line
+secure:SetScript("PreClick", function(self, button)
+  if InCombatLockdown() then return end
+  self.sending = nil
+  self:SetAttribute("type", nil)
+  self:SetAttribute("macrotext", nil)
+  if button ~= "LeftButton" then return end
+  local sl = hover and Slices()[hover]
+  if not sl or (sl.kind ~= "emote" and sl.kind ~= "say") then return end
+  local text = pending or ns.Pick(sl)
+  if not text then return end
+  local line = ((sl.kind == "say") and "/s " or "/e ") .. text
+  if #line > 255 then line = line:sub(1, 255) end
+  if ns.debug then ns.Print("sending as a macro: " .. line) end
+  self:SetAttribute("type", "macro")
+  self:SetAttribute("macrotext", line)
+  self.sending = true
+end)
+-- after it: close, or do the rest (open a ring, game emotes, right-click)
+secure:SetScript("PostClick", function(self, button)
+  if self.sending then
+    self.sending = nil
+    Close()
+    return
+  end
+  ns.RingClick(button, nil)
+end)
+
+-- combat is about to start: the secure layer can't be touched in combat
+local combat = CreateFrame("Frame")
+combat:RegisterEvent("PLAYER_REGEN_DISABLED")
+combat:SetScript("OnEvent", function()
+  if secure:IsShown() then
+    secure:Hide()
+    if ring:IsShown() and sticky then catcher:Show() end
+  end
+end)
 
 ------------------------------------------------------------------------
 -- Keybinding: hold, flick, release
