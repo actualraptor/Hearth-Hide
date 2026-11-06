@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="HUNTERSJOURNAL_TOGGLE" header="HUNTERSJOURNAL" category="ADDONS">
+    HuntersJournal_Toggle()
+  </Binding>
+  <Binding name="HUNTERSJOURNAL_EMOTE" category="ADDONS">
+    HuntersJournal_SendEmote()
+  </Binding>
+</Bindings>

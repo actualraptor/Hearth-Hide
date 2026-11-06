@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: Mannerisms
+## Notes: A radial menu of roleplay emotes, greetings and lines. Hold a key, flick toward a slice, let go.
+## Author: Raptor
+## Version: 1.0.1
+## OptionalDeps: totalRP3, WellMet
+## SavedVariables: MannerismsDB
+
+Defaults.lua
+Core.lua
+Ring.lua
+Editor.lua

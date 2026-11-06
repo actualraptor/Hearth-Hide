@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="WELLMET_INTRODUCE" header="WELLMET" category="ADDONS">
+    WellMet_Introduce()
+  </Binding>
+  <Binding name="WELLMET_TOGGLE_TARGET" category="ADDONS">
+    WellMet_ToggleTarget()
+  </Binding>
+</Bindings>

@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="MANNERISMS_RING1" runOnUp="true" header="MANNERISMS">Mannerisms_Key(1, keystate)</Binding>
+  <Binding name="MANNERISMS_RING2" runOnUp="true">Mannerisms_Key(2, keystate)</Binding>
+  <Binding name="MANNERISMS_RING3" runOnUp="true">Mannerisms_Key(3, keystate)</Binding>
+  <Binding name="MANNERISMS_RING4" runOnUp="true">Mannerisms_Key(4, keystate)</Binding>
+  <Binding name="MANNERISMS_RING5" runOnUp="true">Mannerisms_Key(5, keystate)</Binding>
+  <Binding name="MANNERISMS_RING6" runOnUp="true">Mannerisms_Key(6, keystate)</Binding>
+</Bindings>

@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: Hunter's Journal
+## Notes: A Monster Hunter style field guide. Research creatures by hunting them to unlock their weaknesses, materials, taming info and lore.
+## Version: 1.7.4
+## SavedVariables: HuntersJournalDB
+
+Data\Families.lua
+Data\Types.lua
+Data\Lore.lua
+Core.lua
+UI.lua
+Notes.lua
+Grounds.lua
+Plates.lua
+MapPins.lua
+Settings.lua

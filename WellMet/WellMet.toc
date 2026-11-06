@@ -1,0 +1,12 @@
+## Interface: 16001
+## Title: Well Met
+## Notes: Roleplay introductions. Strangers' names stay hidden on nameplates until they tell you who they are.
+## Version: 1.1.1
+## OptionalDeps: totalRP3, EllesmereUINameplates
+## SavedVariables: WellMetDB
+## SavedVariablesPerCharacter: WellMetCharDB
+
+Core.lua
+Plates.lua
+Intro.lua
+Settings.lua
