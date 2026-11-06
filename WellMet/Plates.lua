@@ -285,6 +285,9 @@ function ns.Debug()
   P(("target: full=%s  names=%s / %s / %s"):format(tostring(full), tostring(nm), tostring(first), tostring(sur)))
   P(("floating names: friendly=%s enemy=%s (Well Met wants %s)"):format(tostring(GetCVar("UnitNameFriendlyPlayerName")),
     tostring(GetCVar("UnitNameEnemyPlayerName")), ns.db.settings.overhead and "0" or "your choice"))
+  local m = _G.TRP3_BlizzardNamePlates
+  P(("TRP3: status=%s  tooltip line=%s  nameplate hook=%s"):format(tostring(ns.RPStatus and ns.RPStatus("target")),
+    tostring(ns.db.settings.rpLine), m and (m.__wmHooked and "on" or "NOT hooked") or "TRP3 plates not loaded"))
   P(("known=%s  plates=%s  targetFrame=%s"):format(tostring(ns.IsKnownUnit("target")),
     tostring(ns.db.settings.plates), tostring(ns.db.settings.targetFrame)))
   local function Scan(label, frame)
@@ -322,6 +325,11 @@ function ns.Debug()
     if okU and S(same) then
       local okP, isP = pcall(UnitIsPlayer, u)
       P(("%s: player=%s full=%s known=%s"):format(u, tostring(okP and S(isP)), tostring(ns.UnitFull(u)), tostring(ns.IsKnownUnit(u))))
+      local okG2, pl = pcall(C_NamePlate.GetNamePlateForUnit, u)
+      local nf = okG2 and pl and pl.UnitFrame and pl.UnitFrame.name
+      if nf then
+        P(("  TRP3 name on plate: %s"):format(tostring(nf.TRP3_overrideText):gsub("|", "||")))
+      end
       for _, fs in ipairs(byUnit[u] or {}) do
         fs.__wmTrace = true
         Apply(fs)
@@ -338,7 +346,7 @@ local function HookTRP3Plates()
   if not m or m.__wmHooked or type(m.UpdateNamePlateName) ~= "function" then return end
   m.__wmHooked = true
   hooksecurefunc(m, "UpdateNamePlateName", function(self, nameplate)
-    pcall(function()
+    ns.Report("TRP3 nameplate", pcall(function()
       if not ns.db.settings.plates then return end
       local uf = self:GetNamePlateUnitFrame(nameplate)
       local fs = uf and uf.name
@@ -358,7 +366,7 @@ local function HookTRP3Plates()
       fs.__wmBusy = true
       getmetatable(fs).__index.SetText(fs, mask)
       fs.__wmBusy = false
-    end)
+    end))
   end)
 end
 ns.HookTRP3Plates = HookTRP3Plates
@@ -479,6 +487,12 @@ local RP_TEXT = {
   none = { "No Total RP 3 profile", 0.55, 0.55, 0.55 },
 }
 
+local toldRP = false
+local function Report(where, ok, err)
+  if not ok and not toldRP then toldRP = true ns.Print("|cffff6060error in " .. where .. ":|r " .. tostring(err)) end
+end
+ns.Report = Report
+
 local function AddRPLine(tt, unit)
   if not ns.db.settings.rpLine or not unit then return end
   local okP, isPlayer = pcall(UnitIsPlayer, unit)
@@ -543,8 +557,8 @@ function ns.SetupTooltips()
       local ok, _, unit = pcall(tt.GetUnit, tt)
       unit = ok and S(unit)
       if unit then
-        pcall(MaskTooltip, tt, unit)
-        pcall(AddRPLine, tt, unit)
+        Report("tooltip", pcall(MaskTooltip, tt, unit))
+        Report("tooltip line", pcall(AddRPLine, tt, unit))
       end
     end)
   end
@@ -554,8 +568,8 @@ function ns.SetupTooltips()
     trp:HookScript("OnShow", function(self)
       local okE, exists = pcall(UnitExists, "mouseover")
       if okE and S(exists) then
-        pcall(MaskTooltip, self, "mouseover")
-        pcall(AddRPLine, self, "mouseover")
+        Report("TRP3 tooltip", pcall(MaskTooltip, self, "mouseover"))
+        Report("TRP3 tooltip line", pcall(AddRPLine, self, "mouseover"))
       end
     end)
   end
