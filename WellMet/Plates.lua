@@ -423,8 +423,7 @@ ev:SetScript("OnEvent", function(_, event, unit)
     C_Timer.After(5, ns.ApplyOverhead)
   elseif event == "CVAR_UPDATE" then
     -- something turned the floating names back on
-    if ns.db.settings.overhead and (unit == "UnitNameFriendlyPlayerName" or unit == "UnitNameEnemyPlayerName"
-      or unit == "unitNameFriendlyPlayerName" or unit == "unitNameEnemyPlayerName") then
+    if ns.WatchedCVar and ns.WatchedCVar[unit] then
       C_Timer.After(0, ns.ApplyOverhead)
     end
   elseif event == "PLAYER_REGEN_ENABLED" then
@@ -436,15 +435,30 @@ end)
 -- Floating names above characters can only be switched off for everyone,
 -- so while that option is on we turn them off and let nameplates do it.
 ------------------------------------------------------------------------
-local OVERHEAD = { "UnitNameFriendlyPlayerName", "UnitNameEnemyPlayerName" }
+-- setting -> the game's floating-name switches it turns off
+local OVERHEAD = {
+  { "UnitNameFriendlyPlayerName", "overhead" }, { "UnitNameEnemyPlayerName", "overhead" },
+  -- pets, guardians and totems are labelled "<Owner's Pet>"
+  { "UnitNameFriendlyPetName", "petNames" }, { "UnitNameFriendlyGuardianName", "petNames" },
+  { "UnitNameFriendlyTotemName", "petNames" }, { "UnitNameFriendlyMinionName", "petNames" },
+  { "UnitNameEnemyPetName", "petNames" }, { "UnitNameEnemyGuardianName", "petNames" },
+  { "UnitNameEnemyTotemName", "petNames" }, { "UnitNameEnemyMinionName", "petNames" },
+}
+local WATCHED = {}
+for _, p in ipairs(OVERHEAD) do WATCHED[p[1]] = true WATCHED[p[1]:sub(1, 1):lower() .. p[1]:sub(2)] = true end
+ns.WatchedCVar = WATCHED
+
 function ns.ApplyOverhead()
   if InCombatLockdown and InCombatLockdown() then ns.pendingCVars = true return end
   ns.pendingCVars = nil
   local st = ns.db.settings
   st.savedCVars = st.savedCVars or {}
-  for _, cv in ipairs(OVERHEAD) do
-    if st.overhead then
-      local now = GetCVar(cv)
+  for _, p in ipairs(OVERHEAD) do
+    local cv = p[1]
+    local okC, now = pcall(GetCVar, cv)
+    if not okC or now == nil then
+      -- this game version doesn't have that switch
+    elseif st[p[2]] then
       if st.savedCVars[cv] == nil then st.savedCVars[cv] = (now == "0") and "1" or now end
       if now ~= "0" then pcall(SetCVar, cv, "0") end
     elseif st.savedCVars[cv] ~= nil then
@@ -506,6 +520,36 @@ local function AddRPLine(tt, unit)
   tt:Show()
 end
 
+-- a pet's tooltip names its owner: hide that while the owner is a stranger
+local function KnownFirstName(first)
+  if not first then return false end
+  if first == UnitName("player") then return true end
+  for full in pairs(ns.cdb and ns.cdb.known or {}) do
+    if full:match("^([^%-]+)") == first then return true end
+  end
+  return false
+end
+
+local function MaskPetTooltip(tt, unit)
+  if not ns.db.settings.tooltips or not ns.db.settings.petNames then return end
+  local okP, isPlayer = pcall(UnitIsPlayer, unit)
+  if okP and S(isPlayer) then return end
+  local name = tt:GetName()
+  if not name then return end
+  for i = 2, math.min(tt:NumLines(), 4) do
+    local l = _G[name .. "TextLeft" .. i]
+    local okT, t = pcall(l.GetText, l)
+    t = okT and S(t)
+    local owner, kind
+    if type(t) == "string" then owner, kind = t:match("^<?(.-)'s (.-)>?$") end
+    if owner and kind and owner ~= "" then
+      if not KnownFirstName(owner:match("^(%S+)")) then
+        pcall(l.SetText, l, "A stranger's " .. kind)
+      end
+    end
+  end
+end
+
 local function MaskTooltip(tt, unit)
   if not ns.db.settings.tooltips or not unit or ns.IsKnownUnit(unit) then return end
   local name = tt:GetName()
@@ -558,6 +602,7 @@ function ns.SetupTooltips()
       unit = ok and S(unit)
       if unit then
         Report("tooltip", pcall(MaskTooltip, tt, unit))
+        Report("pet tooltip", pcall(MaskPetTooltip, tt, unit))
         Report("tooltip line", pcall(AddRPLine, tt, unit))
       end
     end)
