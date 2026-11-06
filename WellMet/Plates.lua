@@ -550,6 +550,42 @@ local function MaskPetTooltip(tt, unit)
   end
 end
 
+-- an owner's name as TRP3 writes it (RP name, maybe with a title): is it
+-- you, or someone you know?
+local function KnownOwner(text)
+  local function has(n) return type(n) == "string" and n ~= "" and FindWord(text, n) ~= nil end
+  if has(UnitName("player")) then return true end
+  if TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile then
+    local ok, prof = pcall(TRP3_API.profile.getPlayerCurrentProfile)
+    local ch = ok and type(prof) == "table" and prof.player and prof.player.characteristics
+    if ch and has(ch.FN) then return true end
+  end
+  for full in pairs(ns.cdb and ns.cdb.known or {}) do
+    if has(full:match("^([^%-]+)")) then return true end
+    local ch = ns.TRP3Profile(full)
+    if ch and has(ch.FN) then return true end
+  end
+  return false
+end
+
+-- Total RP 3's companion tooltip says "Owner: Name Surname"
+local function MaskCompanionTooltip(tt)
+  if not ns.db.settings.tooltips or not ns.db.settings.petNames then return end
+  local name = tt:GetName()
+  if not name then return end
+  for i = 1, tt:NumLines() do
+    local l = _G[name .. "TextLeft" .. i]
+    local okT, t = pcall(l.GetText, l)
+    t = okT and S(t)
+    local label, owner
+    if type(t) == "string" then label, owner = t:match("^(Owner:%s*)(.+)$") end
+    if owner then
+      local plain = owner:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+      if not KnownOwner(plain) then pcall(l.SetText, l, label .. "a stranger") end
+    end
+  end
+end
+
 local function MaskTooltip(tt, unit)
   if not ns.db.settings.tooltips or not unit or ns.IsKnownUnit(unit) then return end
   local name = tt:GetName()
@@ -606,6 +642,10 @@ function ns.SetupTooltips()
         Report("tooltip line", pcall(AddRPLine, tt, unit))
       end
     end)
+  end
+  local comp = _G.TRP3_CompanionTooltip
+  if comp and comp.HookScript then
+    comp:HookScript("OnShow", function(self) Report("TRP3 companion tooltip", pcall(MaskCompanionTooltip, self)) end)
   end
   -- Total RP 3 draws its own character tooltip for the unit under the mouse
   local trp = _G.TRP3_CharacterTooltip

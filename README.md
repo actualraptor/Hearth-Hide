@@ -14,7 +14,7 @@ Each works on its own. Total RP 3 is optional but recommended.
 
 - [**HearthAndHide.zip**](downloads/HearthAndHide.zip?raw=1): the whole kit
 - [HuntersJournal.zip](downloads/HuntersJournal.zip?raw=1): Hunter's Journal 1.7.4
-- [WellMet.zip](downloads/WellMet.zip?raw=1): Well Met 1.2.1
+- [WellMet.zip](downloads/WellMet.zip?raw=1): Well Met 1.2.2
 - [Mannerisms.zip](downloads/Mannerisms.zip?raw=1): Mannerisms 1.0.1
 
 ## Install
