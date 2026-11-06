@@ -17,19 +17,16 @@
   <tr>
     <td align="center" width="33%">
       <a href="#hunters-journal"><img src=".github/assets/logo-hj.png" width="180" alt="Hunter's Journal"></a><br>
-      <b>Hunter's Journal</b><br>
       <sub>A Monster Hunter–style field guide that fills in as you hunt.</sub><br><br>
       <a href="https://github.com/actualraptor/hearth-hide/raw/main/downloads/HuntersJournal.zip">Download</a> · <code>/hj</code>
     </td>
     <td align="center" width="33%">
       <a href="#well-met"><img src=".github/assets/logo-wm.png" width="180" alt="Well Met"></a><br>
-      <b>Well Met</b><br>
       <sub>Strangers' names stay hidden until they tell you who they are.</sub><br><br>
       <a href="https://github.com/actualraptor/hearth-hide/raw/main/downloads/WellMet.zip">Download</a> · <code>/wellmet</code>
     </td>
     <td align="center" width="33%">
       <a href="#mannerisms"><img src=".github/assets/logo-mm.png" width="180" alt="Mannerisms"></a><br>
-      <b>Mannerisms</b><br>
       <sub>Hold a key, flick toward an emote, let go. RP on a ring menu.</sub><br><br>
       <a href="https://github.com/actualraptor/hearth-hide/raw/main/downloads/Mannerisms.zip">Download</a> · <code>/mm</code>
     </td>
