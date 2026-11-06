@@ -6,7 +6,7 @@
 **Categories:** Roleplay, Chat & Communication, Action Bars
 **Logo:** `.github/assets/logo-mm.png`
 **Screenshots:** `mm-reactions.jpg` (main), `mm-main.jpg`, `mm-chat.jpg`
-**Version:** 1.0.3 · `downloads/Mannerisms.zip`
+**Version:** 1.0.4 · `downloads/Mannerisms.zip`
 
 ## Description
 
@@ -34,7 +34,7 @@ Part of **Hearth & Hide**, a set of roleplay addons for WoW: Forever.
 Source: https://github.com/actualraptor/hearth-hide
 ```
 
-## Changelog (1.0.3)
+## Changelog (1.0.4)
 
 ```markdown
 First release on Wago.

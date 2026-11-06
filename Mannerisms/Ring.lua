@@ -30,8 +30,14 @@ local secure = CreateFrame("Button", "MannerismsClick", UIParent, "SecureActionB
 secure:SetAllPoints(UIParent)
 secure:SetFrameStrata("FULLSCREEN_DIALOG")
 secure:SetFrameLevel(250)
-secure:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+-- the game runs secure buttons on press or on release depending on the
+-- "cast on key down" setting, so listen to both and act on the one it uses
+secure:RegisterForClicks("AnyUp", "AnyDown")
 secure:Hide()
+local function OnPhase(down)
+  local useDown = GetCVarBool and GetCVarBool("ActionButtonUseKeyDown")
+  return (down and true or false) == (useDown and true or false)
+end
 
 local function ClickLayerOn()
   if InCombatLockdown() then catcher:Show() else catcher:Hide() secure:Show() end
@@ -319,8 +325,8 @@ end
 catcher:SetScript("OnClick", function(_, button) ns.RingClick(button, nil) end)
 
 -- before the secure click runs: point it at the hovered line
-secure:SetScript("PreClick", function(self, button)
-  if InCombatLockdown() then return end
+secure:SetScript("PreClick", function(self, button, down)
+  if InCombatLockdown() or not OnPhase(down) then return end
   self.sending = nil
   self:SetAttribute("type", nil)
   self:SetAttribute("macrotext", nil)
@@ -337,7 +343,8 @@ secure:SetScript("PreClick", function(self, button)
   self.sending = true
 end)
 -- after it: close, or do the rest (open a ring, game emotes, right-click)
-secure:SetScript("PostClick", function(self, button)
+secure:SetScript("PostClick", function(self, button, down)
+  if not OnPhase(down) then return end
   if self.sending then
     self.sending = nil
     Close()
