@@ -24,6 +24,19 @@ ns.Mask = Mask
 -- with SetFormattedText so nameplate addons that re-apply their own text on
 -- SetText (EllesmereUI does) don't fight it.
 ------------------------------------------------------------------------
+-- where `word` appears in `text` as a whole word (so "Bella" doesn't
+-- match inside "Bellathene")
+local function WordByte(b) return b and (b >= 128 or (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= 122)) end
+local function FindWord(text, word)
+  if type(word) ~= "string" or word == "" then return nil end
+  local i, j = text:find(word, 1, true)
+  while i do
+    if not WordByte(text:byte(i - 1)) and not WordByte(text:byte(j + 1)) then return i, j end
+    i, j = text:find(word, i + 1, true)
+  end
+  return nil
+end
+
 local hooked = {}   -- fontstring -> true
 local byUnit = {}   -- unit token -> { fontstrings }
 
@@ -56,11 +69,14 @@ local function Apply(fs, fromWrite)
       local full, first = ns.UnitNames(unit)
       for _, n in ipairs({ full, first }) do
         local i, j
-        if n then i, j = cur:find(n, 1, true) end
+        if n then i, j = FindWord(cur, n) end
         if i and j then out = cur:sub(1, i - 1) .. mask .. cur:sub(j + 1) break end
       end
     end
     fs.__wmShown = out
+    -- Total RP 3 nameplates put the RP name back over ours: make the mask
+    -- its replacement text as well
+    if fs.TRP3_overrideText ~= nil then fs.TRP3_overrideText = out end
     fs.__wmBusy = true
     local okW, errW = pcall(fs.SetFormattedText, fs, "%s", out)
     fs.__wmBusy = false
@@ -315,7 +331,42 @@ function ns.Debug()
   end
 end
 
+-- Total RP 3's nameplate module: after it picks a name for a plate, swap
+-- in the mask for strangers (keeping its in-character / OOC marker)
+local function HookTRP3Plates()
+  local m = _G.TRP3_BlizzardNamePlates
+  if not m or m.__wmHooked or type(m.UpdateNamePlateName) ~= "function" then return end
+  m.__wmHooked = true
+  hooksecurefunc(m, "UpdateNamePlateName", function(self, nameplate)
+    pcall(function()
+      if not ns.db.settings.plates then return end
+      local uf = self:GetNamePlateUnitFrame(nameplate)
+      local fs = uf and uf.name
+      if not fs then return end
+      local unit = S(self:GetUnitFrameUnit(uf))
+      if not unit or ns.IsKnownUnit(unit) then return end
+      if fs.TRP3_overrideText == nil then return end -- TRP3 isn't renaming this one
+      local mask = Mask(unit)
+      local info = self:GetUnitDisplayInfo(unit)
+      local util = _G.TRP3_NamePlatesUtil
+      if info and info.roleplayStatus and util and util.PrependRoleplayStatusToText then
+        local ok, t = pcall(util.PrependRoleplayStatusToText, mask, info.roleplayStatus)
+        if ok and t then mask = t end
+      end
+      fs.TRP3_overrideText = mask
+      fs.__wmShown, fs.__wmMasked, fs.__wmUnit = mask, true, unit
+      fs.__wmBusy = true
+      getmetatable(fs).__index.SetText(fs, mask)
+      fs.__wmBusy = false
+    end)
+  end)
+end
+ns.HookTRP3Plates = HookTRP3Plates
+
 function ns.RefreshPlates()
+  -- let Total RP 3 re-pick names (someone just became known, or a setting changed)
+  local m = _G.TRP3_BlizzardNamePlates
+  if m and m.__wmHooked and m.UpdateAllNamePlates then pcall(m.UpdateAllNamePlates, m) end
   for unit, list in pairs(byUnit) do
     for _, fs in ipairs(list) do
       if fs.__wmUnit == unit then Apply(fs) end
@@ -464,7 +515,7 @@ local function MaskTooltip(tt, unit)
       cands[#cands + 1] = first
       table.sort(cands, function(x, y) return #x > #y end)
       for _, n in ipairs(cands) do
-        local i, j = t:find(n, 1, true)
+        local i, j = FindWord(t, n)
         if i and j then out = t:sub(1, i - 1) .. Mask(unit) .. t:sub(j + 1) break end
       end
     end
@@ -485,6 +536,7 @@ local function MaskTooltip(tt, unit)
 end
 
 function ns.SetupTooltips()
+  HookTRP3Plates()
   if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tt)
       if tt ~= GameTooltip then return end
