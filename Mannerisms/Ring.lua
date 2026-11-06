@@ -21,6 +21,7 @@ local catcher = CreateFrame("Button", nil, ring)
 catcher:SetAllPoints(UIParent)
 catcher:SetFrameStrata("FULLSCREEN_DIALOG")
 catcher:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+catcher:EnableMouse(true)
 catcher:Hide()
 
 local function Round(parent, layer, size, r, g, b, a, sub)
@@ -77,8 +78,14 @@ hint:SetPoint("BOTTOM", 0, 20)
 local slots = {}
 local function Slot(i)
   if slots[i] then return slots[i] end
-  local s = CreateFrame("Frame", nil, ring)
+  -- a button, so a click lands on the slice itself
+  local s = CreateFrame("Button", nil, ring)
   s:SetSize(52, 52)
+  s.index = i
+  s:EnableMouse(true)
+  s:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  s:SetFrameLevel(catcher:GetFrameLevel() + 5)
+  s:SetScript("OnClick", function(self, button) if ns.RingClick then ns.RingClick(button, self.index) end end)
   s.rim = Round(s, "BACKGROUND", 52, GOLD[1], GOLD[2], GOLD[3], 0.75)
   s.rim:SetPoint("CENTER")
   s.bg = Round(s, "BORDER", 48, 0.06, 0.035, 0.02, 1)
@@ -276,7 +283,9 @@ ring:SetScript("OnUpdate", function(self)
   end
 end)
 
-catcher:SetScript("OnClick", function(_, button)
+-- a click while the ring is open: on a slice (idx), or anywhere else
+function ns.RingClick(button, idx)
+  if ns.debug then ns.Print(("click %s on %s (hover=%s)"):format(tostring(button), tostring(idx), tostring(hover))) end
   if button == "RightButton" then
     if #stack > 0 then
       local back = table.remove(stack)
@@ -287,8 +296,10 @@ catcher:SetScript("OnClick", function(_, button)
     end
     return
   end
-  if hover then ns.Safe(Activate, hover) else Close() end
-end)
+  local target = idx or hover
+  if target then ns.Safe(Activate, target) else Close() end
+end
+catcher:SetScript("OnClick", function(_, button) ns.RingClick(button, nil) end)
 
 ------------------------------------------------------------------------
 -- Keybinding: hold, flick, release
