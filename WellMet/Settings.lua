@@ -7,7 +7,7 @@ local FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 local GOLD = { 0.85, 0.69, 0.40 }
 
 local win = CreateFrame("Frame", "WellMetSettings", UIParent, "BackdropTemplate")
-win:SetSize(560, 650)
+win:SetSize(560, 676)
 win:SetPoint("CENTER")
 win:SetFrameStrata("DIALOG")
 win:EnableMouse(true)
@@ -85,6 +85,7 @@ Header("Strangers")
 Check("Hide strangers' names on nameplates", "plates", plates)
 Check("Hide strangers' names on your target frame", "targetFrame", plates)
 Check("Hide strangers' names in tooltips (also Total RP 3's)", "tooltips")
+Check("Show in tooltips whether someone uses Total RP 3, and if they're in character", "rpLine")
 Check("Turn off the game's floating names above characters", "overhead", function() ns.ApplyOverhead() end)
 do
   local t = Text(win, 12)

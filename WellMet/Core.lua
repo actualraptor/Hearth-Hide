@@ -20,6 +20,7 @@ ns.Print = Print
 local DEFAULTS = {
   plates = true,          -- hide strangers' names on nameplates
   tooltips = true,        -- ...and in tooltips (incl. Total RP 3)
+  rpLine = true,          -- tooltip line: in character / out of character / no TRP3
   overhead = true,        -- turn off the game's floating names above heads
   style = "race",         -- "race" (Human woman) or "stranger"
   knowGuild = true,       -- guildmates count as known

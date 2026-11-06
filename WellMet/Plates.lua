@@ -398,6 +398,49 @@ end
 ------------------------------------------------------------------------
 -- Tooltips: the game's own and Total RP 3's character tooltip
 ------------------------------------------------------------------------
+-- Total RP 3 status of a player, using TRP3's own lookups
+local function RPStatus(unit)
+  local reg = TRP3_API and TRP3_API.register
+  if not reg then return nil end
+  local id
+  if reg.getUnitID then
+    local ok, v = pcall(reg.getUnitID, unit)
+    id = ok and S(v) or nil
+  end
+  id = id or ns.UnitFull(unit)
+  if not id then return nil end
+  local okK, known = pcall(reg.isUnitIDKnown, id)
+  if not (okK and known) then return "none" end
+  if reg.getUnitIDCharacter then
+    local okC, char = pcall(reg.getUnitIDCharacter, id)
+    if okC and type(char) == "table" and char.RP then
+      return char.RP == 1 and "ic" or "ooc"
+    end
+  end
+  return "known"
+end
+ns.RPStatus = RPStatus
+
+local RP_TEXT = {
+  ic = { "Total RP 3: in character", 0.45, 0.85, 0.45 },
+  ooc = { "Total RP 3: out of character", 0.9, 0.45, 0.4 },
+  known = { "Total RP 3 profile", 0.75, 0.7, 0.6 },
+  none = { "No Total RP 3 profile", 0.55, 0.55, 0.55 },
+}
+
+local function AddRPLine(tt, unit)
+  if not ns.db.settings.rpLine or not unit then return end
+  local okP, isPlayer = pcall(UnitIsPlayer, unit)
+  if not (okP and S(isPlayer)) then return end
+  local okM, me = pcall(UnitIsUnit, unit, "player")
+  if okM and S(me) then return end
+  local st = RPStatus(unit)
+  local t = st and RP_TEXT[st]
+  if not t then return end
+  tt:AddLine(t[1], t[2], t[3], t[4])
+  tt:Show()
+end
+
 local function MaskTooltip(tt, unit)
   if not ns.db.settings.tooltips or not unit or ns.IsKnownUnit(unit) then return end
   local name = tt:GetName()
@@ -447,7 +490,10 @@ function ns.SetupTooltips()
       if tt ~= GameTooltip then return end
       local ok, _, unit = pcall(tt.GetUnit, tt)
       unit = ok and S(unit)
-      if unit then pcall(MaskTooltip, tt, unit) end
+      if unit then
+        pcall(MaskTooltip, tt, unit)
+        pcall(AddRPLine, tt, unit)
+      end
     end)
   end
   -- Total RP 3 draws its own character tooltip for the unit under the mouse
@@ -455,7 +501,10 @@ function ns.SetupTooltips()
   if trp and trp.HookScript then
     trp:HookScript("OnShow", function(self)
       local okE, exists = pcall(UnitExists, "mouseover")
-      if okE and S(exists) then pcall(MaskTooltip, self, "mouseover") end
+      if okE and S(exists) then
+        pcall(MaskTooltip, self, "mouseover")
+        pcall(AddRPLine, self, "mouseover")
+      end
     end)
   end
 end
