@@ -27,15 +27,17 @@ ns.Mask = Mask
 -- where `word` appears in `text` as a whole word (so "Bella" doesn't
 -- match inside "Bellathene")
 local function WordByte(b) return b and (b >= 128 or (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= 122)) end
-local function FindWord(text, word)
+local function FindWord(text, word, init)
   if type(word) ~= "string" or word == "" then return nil end
-  local i, j = text:find(word, 1, true)
+  local i, j = text:find(word, init or 1, true)
   while i do
     if not WordByte(text:byte(i - 1)) and not WordByte(text:byte(j + 1)) then return i, j end
     i, j = text:find(word, i + 1, true)
   end
   return nil
 end
+
+ns.FindWord = FindWord
 
 local hooked = {}   -- fontstring -> true
 local byUnit = {}   -- unit token -> { fontstrings }

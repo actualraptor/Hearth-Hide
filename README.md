@@ -75,6 +75,7 @@ On an RP server everyone's name hangs over their head. Well Met covers players' 
 - Guildmates, your group and your friends list count as known.
 - Hidden on nameplates, your target frame (keeps the level: `13 | Gnome woman`) and tooltips, including Total RP 3's own nameplate names and companion tooltips.
 - Players too far for a nameplate show no name at all, and pets stop giving their owner away.
+- The game's emote lines too: *You thank the Human woman.*
 - Tooltips say whether someone uses **Total RP 3** and if they're **in character**.
 - An **introduce button** sits by your target frame and glows while they're a stranger. It sends a line built from your TRP3 profile.
 - Works with Blizzard's frames and **EllesmereUI**.

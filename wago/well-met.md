@@ -6,7 +6,7 @@
 **Categories:** Roleplay, Unit Frames / Nameplates, Tooltip
 **Logo:** `.github/assets/logo-wm.png`
 **Screenshots:** `wm-snow.jpg` (main), `campfire.jpg`
-**Version:** 1.2.2 · `downloads/WellMet.zip`
+**Version:** 1.3.0 · `downloads/WellMet.zip`
 
 ## Description
 
@@ -27,6 +27,7 @@ On an RP server everyone's name hangs over their head, so you know the hooded st
 - Tooltips, including Total RP 3's, with its in-character / OOC marker kept
 - The game's floating names, so players too far for a nameplate show no name at all
 - Pet and totem labels, and a stranger's pet shows as *A stranger's Pet*
+- The game's emote lines: *You thank the Human woman.* / *A Human woman waves at you.*
 
 ### Introducing yourself
 An **introduce button** sits beside your target frame when you target a player, and glows while they're a stranger. It posts a random emote built from your Total RP 3 profile: name, title, profession, motto and pronouns. Write your own lines in `/wellmet`.
@@ -44,7 +45,7 @@ Part of **Hearth & Hide**, a set of roleplay addons for WoW: Forever.
 Source: https://github.com/actualraptor/hearth-hide
 ```
 
-## Changelog (1.2.2)
+## Changelog (1.3.0)
 
 ```markdown
 First release on Wago.
