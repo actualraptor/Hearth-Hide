@@ -290,6 +290,8 @@ function ns.Debug()
   local m = _G.TRP3_BlizzardNamePlates
   P(("TRP3: status=%s  tooltip line=%s  nameplate hook=%s"):format(tostring(ns.RPStatus and ns.RPStatus("target")),
     tostring(ns.db.settings.rpLine), m and (m.__wmHooked and "on" or "NOT hooked") or "TRP3 plates not loaded"))
+  local rel = ns.TRP3Relation(full, "target")
+  P("TRP3 relationship: " .. (rel and tostring(rel.name or rel.id) or "none"))
   P(("known=%s  plates=%s  targetFrame=%s"):format(tostring(ns.IsKnownUnit("target")),
     tostring(ns.db.settings.plates), tostring(ns.db.settings.targetFrame)))
   local function Scan(label, frame)
@@ -633,6 +635,17 @@ end
 
 function ns.SetupTooltips()
   HookTRP3Plates()
+  -- setting a Total RP 3 relationship can make someone known
+  local rel = TRP3_API and TRP3_API.register and TRP3_API.register.relation
+  if rel and rel.setRelation and not rel.__wmHooked then
+    rel.__wmHooked = true
+    hooksecurefunc(rel, "setRelation", function()
+      C_Timer.After(0, function()
+        ns.RefreshPlates()
+        if ns.UpdateButton then ns.UpdateButton() end
+      end)
+    end)
+  end
   if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tt)
       if tt ~= GameTooltip then return end

@@ -28,6 +28,7 @@ local DEFAULTS = {
   knowGuild = true,       -- guildmates count as known
   knowGroup = true,       -- party / raid members count as known
   knowFriends = true,     -- friends list counts as known
+  knowRelations = true,   -- anyone you've set a Total RP 3 relationship with
   announce = true,        -- chat line when you learn someone's name
   targetFrame = true,     -- ...and on your target frame
   button = true,          -- show the introduce button
@@ -100,8 +101,29 @@ end
 ------------------------------------------------------------------------
 local cdb -- per character
 
+-- the relationship you've set with someone in Total RP 3 (nil if none)
+-- `id` is TRP3's id for them ("Name-Realm"); `unit` is used to find it
+function ns.TRP3Relation(id, unit)
+  local reg = TRP3_API and TRP3_API.register
+  if not (reg and reg.relation and reg.relation.getRelation and reg.getUnitIDProfileID) then return nil end
+  if unit and reg.getUnitID then
+    local okU, uid = pcall(reg.getUnitID, unit)
+    uid = okU and S(uid)
+    if uid then id = uid end
+  end
+  if not id then return nil end
+  local okP, profileID = pcall(reg.getUnitIDProfileID, id)
+  if not (okP and profileID) then return nil end
+  local okR, rel = pcall(reg.relation.getRelation, profileID)
+  if okR and type(rel) == "table" and rel.id and rel.id ~= "NONE" then return rel end
+  return nil
+end
+
 function ns.IsKnownName(full)
-  return full ~= nil and cdb ~= nil and cdb.known[full] ~= nil
+  if full == nil or cdb == nil then return false end
+  if cdb.known[full] ~= nil then return true end
+  if ns.db and ns.db.settings.knowRelations and ns.TRP3Relation(full) then return true end
+  return false
 end
 
 function ns.IsKnownUnit(unit)
@@ -122,6 +144,7 @@ function ns.IsKnownUnit(unit)
     local okI, inGuild = pcall(UnitIsInMyGuild, unit)
     if okI and S(inGuild) then return true end
   end
+  if st.knowRelations and ns.TRP3Relation(full, unit) then return true end
   if st.knowFriends and C_FriendList and C_FriendList.IsFriend then
     local guid = S(UnitGUID(unit))
     if guid then

@@ -6,7 +6,7 @@
 **Categories:** Roleplay, Unit Frames / Nameplates, Tooltip
 **Logo:** `.github/assets/logo-wm.png`
 **Screenshots:** `wm-snow.jpg` (main), `campfire.jpg`
-**Version:** 1.3.0 · `downloads/WellMet.zip`
+**Version:** 1.4.0 · `downloads/WellMet.zip`
 
 ## Description
 
@@ -17,7 +17,7 @@ On an RP server everyone's name hangs over their head, so you know the hooded st
 
 ### Learning names
 - Someone says their name in `/say`, `/yell`, `/emote` or a whisper, and you know them from then on. Their **Total RP 3** name counts too.
-- Guildmates, your group and your friends list count as known (each can be turned off).
+- Guildmates, your group, your friends list and anyone you've set a **Total RP 3 relationship** with count as known (each can be turned off).
 - Mark anyone known or a stranger again with `/wmet know` or a right-click on the introduce button.
 - Each of your characters keeps its own list of who it has met.
 
@@ -45,7 +45,7 @@ Part of **Hearth & Hide**, a set of roleplay addons for WoW: Forever.
 Source: https://github.com/actualraptor/hearth-hide
 ```
 
-## Changelog (1.3.0)
+## Changelog (1.4.0)
 
 ```markdown
 First release on Wago.

@@ -7,7 +7,7 @@ local FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 local GOLD = { 0.85, 0.69, 0.40 }
 
 local win = CreateFrame("Frame", "WellMetSettings", UIParent, "BackdropTemplate")
-win:SetSize(560, 728)
+win:SetSize(560, 754)
 win:SetPoint("CENTER")
 win:SetFrameStrata("DIALOG")
 win:EnableMouse(true)
@@ -119,6 +119,7 @@ Check("Guildmates", "knowGuild", plates, 16)
 Check("Party and raid members", "knowGroup", plates, 200)
 Check("Friends", "knowFriends", plates, 400)
 y = y - 26
+Check("Anyone I've set a Total RP 3 relationship with", "knowRelations", plates)
 Check("Tell me in chat when I learn someone's name", "announce")
 
 Header("Introducing yourself")
