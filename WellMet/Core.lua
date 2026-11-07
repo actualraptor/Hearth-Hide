@@ -331,6 +331,9 @@ SlashCmdList.WELLMET = function(msg)
     WellMet_Introduce()
   elseif cmd == "know" or cmd == "toggle" or cmd == "forget" then
     ToggleTarget()
+  elseif cmd == "chatdebug" then
+    ns.chatDebug = 3
+    Print("the next 3 /say, /yell or /emote lines will be described in chat.")
   elseif cmd == "names" then
     if ns.NameCVars then ns.NameCVars() end
   elseif cmd == "debug" then

@@ -6,7 +6,7 @@
 **Categories:** Roleplay, Unit Frames / Nameplates, Tooltip
 **Logo:** `.github/assets/logo-wm.png`
 **Screenshots:** `wm-snow.jpg` (main), `campfire.jpg`
-**Version:** 1.5.0 · `downloads/WellMet.zip`
+**Version:** 1.5.1 · `downloads/WellMet.zip`
 
 ## Description
 
@@ -47,7 +47,7 @@ Part of **Hearth & Hide**, a set of roleplay addons for WoW: Forever.
 Source: https://github.com/actualraptor/hearth-hide
 ```
 
-## Changelog (1.5.0)
+## Changelog (1.5.1)
 
 ```markdown
 First release on Wago.

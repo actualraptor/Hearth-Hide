@@ -124,6 +124,9 @@ local function SenderMask(event, ...)
   local args = { ... }
   local sender, guid = S(args[3]), S(args[13])
   if type(sender) ~= "string" or sender == "" then return nil end
+  if type(guid) ~= "string" or not guid:find("^Player%-") then return nil end
+  local okMe, myGuid = pcall(UnitGUID, "player")
+  if okMe and S(myGuid) == guid then return nil end
   local short = sender:gsub("%-.*$", "")
   if short == UnitName("player") then return nil end
   local unit = type(guid) == "string" and UnitByGUID(guid) or UnitByName(short)
@@ -165,6 +168,16 @@ local function WrapAll()
 end
 
 local function Own(event, ...)
+  if ns.chatDebug and LOCAL[event] then
+    ns.chatDebug = ns.chatDebug - 1
+    if ns.chatDebug <= 0 then ns.chatDebug = nil end
+    local parts = { tostring(event) }
+    for i = 1, math.min(select("#", ...), 14) do
+      local v = select(i, ...)
+      parts[#parts + 1] = i .. "=" .. ((issecretvalue and issecretvalue(v)) and "<secret>" or tostring(v))
+    end
+    ns.Print("chat hook: " .. table.concat(parts, "  "):gsub("|", "||"))
+  end
   local ok, mask = pcall(SenderMask, event, ...)
   if ok and mask then return mask end
   return nil
@@ -174,10 +187,6 @@ mine[Own] = true
 function ns.SetupChatNames()
   if not (CFU and CFU.AddSenderNameFilter) or ns.chatNamesReady then return end
   ns.chatNamesReady = true
+  -- only our own filter; other addons' filters (Total RP 3's) are left alone
   CFU.AddSenderNameFilter(Own)
-  WrapAll()
-  -- filters other addons add later get wrapped too
-  hooksecurefunc(CFU, "AddSenderNameFilter", function(f)
-    if not mine[f] then C_Timer.After(0, WrapAll) end
-  end)
 end
