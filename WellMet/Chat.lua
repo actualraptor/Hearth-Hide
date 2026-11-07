@@ -185,6 +185,8 @@ end
 mine[Own] = true
 
 function ns.SetupChatNames()
+  -- only hook chat at all when the (experimental) setting is on
+  if not (ns.db and ns.db.settings.chatNames) then return end
   if not (CFU and CFU.AddSenderNameFilter) or ns.chatNamesReady then return end
   ns.chatNamesReady = true
   -- only our own filter; other addons' filters (Total RP 3's) are left alone

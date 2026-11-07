@@ -24,7 +24,7 @@ local DEFAULTS = {
   overhead = true,        -- turn off the game's floating names above heads
   petNames = true,
   chatEmotes = true,
-  chatNames = true,       -- "[Human woman] says:" in /say, /yell, /emote      -- "You thank the Human woman." instead of their name        -- ...and the "<Owner's Pet>" labels on pets and totems
+  chatNames = false,      -- "[Human woman] says:" in /say, /yell, /emote (experimental)      -- "You thank the Human woman." instead of their name        -- ...and the "<Owner's Pet>" labels on pets and totems
   style = "race",         -- "race" (Human woman) or "stranger"
   knowGuild = true,       -- guildmates count as known
   knowGroup = true,       -- party / raid members count as known
@@ -253,6 +253,8 @@ ev:SetScript("OnEvent", function(_, event, a1, a2)
     WellMetCharDB = WellMetCharDB or {}
     WellMetCharDB.known = WellMetCharDB.known or {}
     ns.db, ns.cdb, cdb = WellMetDB, WellMetCharDB, WellMetCharDB
+    -- 1.5.0's chat name hook could hide chat lines: start with it off
+    if not WellMetDB.chatNamesReset then WellMetDB.chatNamesReset = true WellMetDB.settings.chatNames = false end
     -- 1.0 saved surnames where the realm belongs ("Joey-Candleflame")
     if (cdb.v or 1) < 2 and Realm() ~= "" then
       local fixed = {}

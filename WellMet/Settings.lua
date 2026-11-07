@@ -87,7 +87,7 @@ Check("Hide strangers' names on your target frame", "targetFrame", plates)
 Check("Hide strangers' names in tooltips (also Total RP 3's)", "tooltips")
 Check("Show in tooltips whether someone uses Total RP 3, and if they're in character", "rpLine")
 Check("Hide strangers' names in the game's emote lines (\"You thank the Human woman.\")", "chatEmotes")
-Check("Hide strangers' names in front of /say, /yell and /emote lines", "chatNames")
+Check("Hide strangers' names in front of /say lines (experimental, needs /reload)", "chatNames")
 Check("Turn off the game's floating names above characters", "overhead", function() ns.ApplyOverhead() end)
 Check("Turn off pet and totem names (they show the owner's name; yours too)", "petNames", function() ns.ApplyOverhead() end)
 do
