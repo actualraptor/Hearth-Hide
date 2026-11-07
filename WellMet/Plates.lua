@@ -376,6 +376,7 @@ end
 ns.HookTRP3Plates = HookTRP3Plates
 
 function ns.RefreshPlates()
+  if ns.ApplyTRP3Title then pcall(ns.ApplyTRP3Title) end
   -- let Total RP 3 re-pick names (someone just became known, or a setting changed)
   local m = _G.TRP3_BlizzardNamePlates
   if m and m.__wmHooked and m.UpdateAllNamePlates then pcall(m.UpdateAllNamePlates, m) end
@@ -633,8 +634,41 @@ local function MaskTooltip(tt, unit)
   tt:Show()
 end
 
+-- Total RP 3's target bar (its toolbar's frame above your target) shows
+-- the target's RP name: show the mask there for strangers
+local trpTitleBusy = false
+local function ApplyTRP3Title()
+  local tf = _G.TRP3_TargetFrame
+  if not tf or not tf.SetTitleText or trpTitleBusy then return end
+  local okP, isPlayer = pcall(UnitIsPlayer, "target")
+  local stranger = ns.db.settings.targetFrame and okP and S(isPlayer) and not ns.IsKnownUnit("target")
+  trpTitleBusy = true
+  if stranger then
+    pcall(tf.SetTitleText, tf, Mask("target"))
+    tf.__wmMasked = true
+  elseif tf.__wmMasked then
+    tf.__wmMasked = nil
+    if tf.__wmOrig then pcall(tf.SetTitleText, tf, tf.__wmOrig) end
+  end
+  trpTitleBusy = false
+end
+ns.ApplyTRP3Title = ApplyTRP3Title
+
+local function HookTRP3TargetFrame()
+  local tf = _G.TRP3_TargetFrame
+  if not tf or tf.__wmHooked or type(tf.SetTitleText) ~= "function" then return end
+  tf.__wmHooked = true
+  hooksecurefunc(tf, "SetTitleText", function(self, text)
+    if trpTitleBusy then return end
+    self.__wmOrig = text
+    self.__wmMasked = nil
+    Report("TRP3 target bar", pcall(ApplyTRP3Title))
+  end)
+end
+
 function ns.SetupTooltips()
   HookTRP3Plates()
+  HookTRP3TargetFrame()
   -- setting a Total RP 3 relationship can make someone known
   local rel = TRP3_API and TRP3_API.register and TRP3_API.register.relation
   if rel and rel.setRelation and not rel.__wmHooked then

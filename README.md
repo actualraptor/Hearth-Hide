@@ -73,7 +73,7 @@ On an RP server everyone's name hangs over their head. Well Met covers players' 
 
 - **Learn names in character.** When someone says their name in `/say`, `/emote` or a whisper, you know them from then on. Their Total RP 3 name counts too.
 - Guildmates, your group, your friends list and anyone you've set a **Total RP 3 relationship** with count as known.
-- Hidden on nameplates, your target frame (keeps the level: `13 | Gnome woman`) and tooltips, including Total RP 3's own nameplate names and companion tooltips.
+- Hidden on nameplates, your target frame (keeps the level: `13 | Gnome woman`) and tooltips, including Total RP 3's own nameplate names, target bar and companion tooltips.
 - Players too far for a nameplate show no name at all, and pets stop giving their owner away.
 - The game's emote lines too: *You thank the Human woman.*
 - Tooltips say whether someone uses **Total RP 3** and if they're **in character**.
