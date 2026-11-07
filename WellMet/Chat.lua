@@ -97,3 +97,87 @@ if ChatFrame_AddMessageEventFilter then
   ChatFrame_AddMessageEventFilter("CHAT_MSG_TEXT_EMOTE", Filter)
 end
 ns.ChatFilter = Filter
+
+------------------------------------------------------------------------
+-- The name in front of /say, /yell and /emote lines. The game builds it
+-- through "sender name filters" (Total RP 3 uses one for RP names). Every
+-- filter gets wrapped: for a stranger in a local channel the mask is
+-- shown, anything else goes through untouched. The clickable link behind
+-- the name still points at the real character.
+------------------------------------------------------------------------
+local LOCAL = { CHAT_MSG_SAY = true, CHAT_MSG_YELL = true, CHAT_MSG_EMOTE = true }
+
+local function UnitByGUID(guid)
+  local list = { "target", "mouseover", "focus" }
+  for i = 1, 40 do list[#list + 1] = "nameplate" .. i end
+  for _, u in ipairs(list) do
+    local okG, g = pcall(UnitGUID, u)
+    g = okG and S(g)
+    if g and g == guid then return u end
+  end
+  return nil
+end
+
+-- the mask for a sender, or nil to leave the name alone
+local function SenderMask(event, ...)
+  if not (ns.db and ns.db.settings.chatNames and LOCAL[event]) then return nil end
+  local args = { ... }
+  local sender, guid = S(args[3]), S(args[13])
+  if type(sender) ~= "string" or sender == "" then return nil end
+  local short = sender:gsub("%-.*$", "")
+  if short == UnitName("player") then return nil end
+  local unit = type(guid) == "string" and UnitByGUID(guid) or UnitByName(short)
+  if unit then
+    local okP, isPlayer = pcall(UnitIsPlayer, unit)
+    if not (okP and S(isPlayer)) or ns.IsKnownUnit(unit) then return nil end
+    return ns.Mask(unit)
+  end
+  if not IsStrangerName(sender) then return nil end
+  return "|cffbdb3a2Stranger|r"
+end
+ns.SenderMask = SenderMask
+
+local CFU = _G.ChatFrameUtil
+local mine = {}  -- our wrappers and our own filter
+
+local function Wrap(orig)
+  local w = function(event, ...)
+    local ok, mask = pcall(SenderMask, event, ...)
+    if ok and mask then return mask end
+    return orig(event, ...)
+  end
+  mine[w] = true
+  return w
+end
+
+local function WrapAll()
+  if not (CFU and CFU.GetSenderNameFilters and CFU.RemoveSenderNameFilter and CFU.AddSenderNameFilter) then return end
+  local ok, list = pcall(CFU.GetSenderNameFilters)
+  if not ok or type(list) ~= "table" then return end
+  local todo = {}
+  for _, f in pairs(list) do
+    if type(f) == "function" and not mine[f] then todo[#todo + 1] = f end
+  end
+  for _, f in ipairs(todo) do
+    CFU.RemoveSenderNameFilter(f)
+    CFU.AddSenderNameFilter(Wrap(f))
+  end
+end
+
+local function Own(event, ...)
+  local ok, mask = pcall(SenderMask, event, ...)
+  if ok and mask then return mask end
+  return nil
+end
+mine[Own] = true
+
+function ns.SetupChatNames()
+  if not (CFU and CFU.AddSenderNameFilter) or ns.chatNamesReady then return end
+  ns.chatNamesReady = true
+  CFU.AddSenderNameFilter(Own)
+  WrapAll()
+  -- filters other addons add later get wrapped too
+  hooksecurefunc(CFU, "AddSenderNameFilter", function(f)
+    if not mine[f] then C_Timer.After(0, WrapAll) end
+  end)
+end

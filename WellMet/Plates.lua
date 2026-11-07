@@ -667,6 +667,7 @@ local function HookTRP3TargetFrame()
 end
 
 function ns.SetupTooltips()
+  if ns.SetupChatNames then Report("chat names", pcall(ns.SetupChatNames)) end
   HookTRP3Plates()
   HookTRP3TargetFrame()
   -- setting a Total RP 3 relationship can make someone known
