@@ -24,12 +24,13 @@ local DEFAULTS = {
   overhead = true,        -- turn off the game's floating names above heads
   petNames = true,
   chatEmotes = true,
-  chatNames = false,      -- "[Human woman] says:" in /say, /yell, /emote (experimental)      -- "You thank the Human woman." instead of their name        -- ...and the "<Owner's Pet>" labels on pets and totems
+  localNames = true,      -- "[Human woman] says:" in /say, /yell and /emote only      -- "You thank the Human woman." instead of their name        -- ...and the "<Owner's Pet>" labels on pets and totems
   style = "race",         -- "race" (Human woman) or "stranger"
   knowGuild = true,       -- guildmates count as known
   knowGroup = true,       -- party / raid members count as known
   knowFriends = true,     -- friends list counts as known
   knowRelations = true,   -- anyone you've set a Total RP 3 relationship with
+  onlyTRP3 = false,       -- only hide people who use Total RP 3
   announce = true,        -- chat line when you learn someone's name
   targetFrame = true,     -- ...and on your target frame
   button = true,          -- show the introduce button
@@ -120,9 +121,30 @@ function ns.TRP3Relation(id, unit)
   return nil
 end
 
+-- does Total RP 3 have a profile for this player? (nil if TRP3 isn't loaded)
+function ns.HasTRP3(id, unit)
+  local reg = TRP3_API and TRP3_API.register
+  if not (reg and reg.isUnitIDKnown) then return nil end
+  if unit and reg.getUnitID then
+    local okU, uid = pcall(reg.getUnitID, unit)
+    uid = okU and S(uid)
+    if uid then id = uid end
+  end
+  if not id then return false end
+  local okK, known = pcall(reg.isUnitIDKnown, id)
+  return (okK and known) and true or false
+end
+
+-- "only hide TRP3 users" is on and this person has no TRP3 profile
+local function NotRoleplaying(full, unit)
+  if not (ns.db and ns.db.settings.onlyTRP3) then return false end
+  return ns.HasTRP3(full, unit) == false
+end
+
 function ns.IsKnownName(full)
   if full == nil or cdb == nil then return false end
   if cdb.known[full] ~= nil then return true end
+  if NotRoleplaying(full) then return true end
   if ns.db and ns.db.settings.knowRelations and ns.TRP3Relation(full) then return true end
   return false
 end
@@ -136,6 +158,7 @@ function ns.IsKnownUnit(unit)
   local full = UnitFull(unit)
   if not full then return true end -- can't tell (secret): never hide by mistake
   if cdb.known[full] then return true end
+  if NotRoleplaying(full, unit) then return true end
   local st = ns.db.settings
   if st.knowGroup then
     local okG, inGroup = pcall(function() return UnitInParty(unit) or UnitInRaid(unit) end)
@@ -254,7 +277,7 @@ ev:SetScript("OnEvent", function(_, event, a1, a2)
     WellMetCharDB.known = WellMetCharDB.known or {}
     ns.db, ns.cdb, cdb = WellMetDB, WellMetCharDB, WellMetCharDB
     -- 1.5.0's chat name hook could hide chat lines: start with it off
-    if not WellMetDB.chatNamesReset then WellMetDB.chatNamesReset = true WellMetDB.settings.chatNames = false end
+    WellMetDB.settings.chatNames = nil
     -- 1.0 saved surnames where the realm belongs ("Joey-Candleflame")
     if (cdb.v or 1) < 2 and Realm() ~= "" then
       local fixed = {}
@@ -334,8 +357,10 @@ SlashCmdList.WELLMET = function(msg)
   elseif cmd == "know" or cmd == "toggle" or cmd == "forget" then
     ToggleTarget()
   elseif cmd == "chatdebug" then
-    ns.chatDebug = 3
-    Print("the next 3 /say, /yell or /emote lines will be described in chat.")
+    ns.chatDebug = 6
+    local n = 0
+    for i = 1, (NUM_CHAT_WINDOWS or 10) do if _G["ChatFrame" .. i] then n = n + 1 end end
+    Print(("watching %d chat windows; describing the next few /say lines. Say something, or wait for someone nearby."):format(n))
   elseif cmd == "names" then
     if ns.NameCVars then ns.NameCVars() end
   elseif cmd == "debug" then

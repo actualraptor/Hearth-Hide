@@ -666,7 +666,27 @@ local function HookTRP3TargetFrame()
   end)
 end
 
+local function WatchTRP3Profiles()
+  local addon = _G.TRP3_Addon
+  local ev = addon and addon.Events and addon.Events.REGISTER_DATA_UPDATED
+  local register = (TRP3_API and TRP3_API.RegisterCallback)
+  if ev and register and not ns.__wmProfileWatch then
+    ns.__wmProfileWatch = true
+    local queued = false
+    pcall(register, addon, ev, function()
+      if queued or not ns.db.settings.onlyTRP3 then return end
+      queued = true
+      C_Timer.After(0.5, function()
+        queued = false
+        ns.RefreshPlates()
+        if ns.UpdateButton then ns.UpdateButton() end
+      end)
+    end)
+  end
+end
+
 function ns.SetupTooltips()
+  Report("TRP3 profiles", pcall(WatchTRP3Profiles))
   if ns.SetupChatNames then Report("chat names", pcall(ns.SetupChatNames)) end
   HookTRP3Plates()
   HookTRP3TargetFrame()

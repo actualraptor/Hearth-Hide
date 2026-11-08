@@ -76,6 +76,8 @@ On an RP server everyone's name hangs over their head. Well Met covers players' 
 - Hidden on nameplates, your target frame (keeps the level: `13 | Gnome woman`) and tooltips, including Total RP 3's own nameplate names, target bar and companion tooltips.
 - Players too far for a nameplate show no name at all, and pets stop giving their owner away.
 - The game's emote lines too: *You thank the Human woman.*
+- Local chat as well: **[Human woman] says:** in `/say`, `/yell` and `/emote` until they tell you their name. Trade, General, party and guild are left alone. *(Needs the game's standard chat; it switches itself off with EllesmereUI's chat module.)*
+- Optional: only hide players who use **Total RP 3**, and show everyone else's name.
 - Tooltips say whether someone uses **Total RP 3** and if they're **in character**.
 - An **introduce button** sits by your target frame and glows while they're a stranger. It sends a line built from your TRP3 profile.
 - Works with Blizzard's frames and **EllesmereUI**.

@@ -7,7 +7,7 @@ local FONT = STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
 local GOLD = { 0.85, 0.69, 0.40 }
 
 local win = CreateFrame("Frame", "WellMetSettings", UIParent, "BackdropTemplate")
-win:SetSize(560, 780)
+win:SetSize(560, 806)
 win:SetPoint("CENTER")
 win:SetFrameStrata("DIALOG")
 win:EnableMouse(true)
@@ -87,7 +87,14 @@ Check("Hide strangers' names on your target frame", "targetFrame", plates)
 Check("Hide strangers' names in tooltips (also Total RP 3's)", "tooltips")
 Check("Show in tooltips whether someone uses Total RP 3, and if they're in character", "rpLine")
 Check("Hide strangers' names in the game's emote lines (\"You thank the Human woman.\")", "chatEmotes")
-Check("Hide strangers' names in front of /say lines (experimental, needs /reload)", "chatNames")
+do
+  local cb = Check("Hide strangers' names in front of /say, /yell and /emote lines", "localNames")
+  local note = Text(win, 10, { 0.75, 0.55, 0.4 })
+  note:SetPoint("LEFT", cb, "RIGHT", 340, 0)
+  win:HookScript("OnShow", function()
+    note:SetText(ns.OtherChatAddon and ns.OtherChatAddon() and "(off with EllesmereUI chat)" or "")
+  end)
+end
 Check("Turn off the game's floating names above characters", "overhead", function() ns.ApplyOverhead() end)
 Check("Turn off pet and totem names (they show the owner's name; yours too)", "petNames", function() ns.ApplyOverhead() end)
 do
@@ -121,6 +128,7 @@ Check("Party and raid members", "knowGroup", plates, 200)
 Check("Friends", "knowFriends", plates, 400)
 y = y - 26
 Check("Anyone I've set a Total RP 3 relationship with", "knowRelations", plates)
+Check("Anyone without Total RP 3 (only hide roleplayers' names)", "onlyTRP3", plates)
 Check("Tell me in chat when I learn someone's name", "announce")
 
 Header("Introducing yourself")
