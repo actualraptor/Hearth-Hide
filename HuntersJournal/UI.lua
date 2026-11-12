@@ -1524,7 +1524,40 @@ local toast = CreateFrame("Button", nil, UIParent)
 toast:SetSize(340, 64)
 toast:SetPoint("TOP", 0, -110)
 toast:SetFrameStrata("HIGH")
+toast:SetMovable(true)
+toast:SetClampedToScreen(true)
+toast:RegisterForDrag("LeftButton")
 toast:Hide()
+
+-- where the pop-up sits: its top centre, saved in the settings once moved
+local function PlaceToast()
+  local pos = ns.db and ns.db.settings.toastPos
+  toast:ClearAllPoints()
+  if pos and pos.x and pos.y then
+    toast:SetPoint("TOP", UIParent, "BOTTOMLEFT", pos.x, pos.y)
+  else
+    toast:SetPoint("TOP", 0, -110)
+  end
+end
+PlaceToast()
+ns.PlaceToast = PlaceToast
+
+-- shift-drag to move it
+toast:SetScript("OnDragStart", function(self)
+  if not IsShiftKeyDown() then return end
+  self.dragging = true
+  self:StartMoving()
+end)
+toast:SetScript("OnDragStop", function(self)
+  if not self.dragging then return end
+  self:StopMovingOrSizing()
+  self.dragging = false
+  self.justMoved = true
+  local s = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
+  local cx = self:GetCenter()
+  ns.db.settings.toastPos = { x = cx * s, y = self:GetTop() * s }
+  PlaceToast()
+end)
 if LEATHER then
   Book(toast, 6)
 else
@@ -1556,6 +1589,11 @@ for p = 1, 5 do
   tPips[p] = d
 end
 toast:SetScript("OnClick", function(self)
+  -- the end of a shift-drag, or a shift-click: not a click on the pop-up
+  if self.justMoved or IsShiftKeyDown() then
+    self.justMoved = false
+    return
+  end
   -- with an emote waiting, a click just sends it (no journal popping open mid-hunt)
   if ns.SendPendingEmote and ns.SendPendingEmote() then
     self:Hide()
@@ -1573,7 +1611,10 @@ toast:SetScript("OnUpdate", function(self, elapsed)
   toastT = toastT + elapsed
   local a
   if toastT < 0.25 then a = toastT / 0.25
-  elseif toastT < toastHold or (toastHold > 5 and self:IsMouseOver()) then a = 1
+  elseif toastT < toastHold or (toastHold > 5 and self:IsMouseOver()) or self.dragging
+    or (IsShiftKeyDown() and self:IsMouseOver()) then
+    a = 1
+    if toastT >= toastHold then toastT = toastHold end -- start fading only once you let go
   else a = 1 - (toastT - toastHold) / 0.6 end
   if a <= 0 then self:Hide() return end
   self:SetAlpha(a)
@@ -1597,6 +1638,7 @@ local function ShowToast(e, top, sub)
     toastHold = 4.5
   end
   toast.key = e.key
+  PlaceToast()
   SetPortrait(tIcon, e)
   tTop:SetText(top)
   tName:SetText(e.name)
@@ -1607,6 +1649,15 @@ local function ShowToast(e, top, sub)
   toast:SetAlpha(0)
   toast:Show()
   if ns.db.settings.toastSound ~= false and SOUNDKIT and SOUNDKIT.IG_QUEST_LOG_OPEN then pcall(PlaySound, SOUNDKIT.IG_QUEST_LOG_OPEN) end
+end
+
+-- a sample pop-up to place it (settings, /hj movetoast)
+function ns.TestToast()
+  local e
+  for _, x in pairs(ns.db.entries) do e = x break end
+  if not e then ns.Print("hunt something first, then the test pop-up has a creature to show.") return end
+  ShowToast(e, "TEST POP-UP", "Shift-drag to move me")
+  toastHold = 15
 end
 
 function ns.OnLevelUp(e, lvl)

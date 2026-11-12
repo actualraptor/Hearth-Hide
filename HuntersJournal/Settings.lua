@@ -12,7 +12,7 @@ local controls = {}
 local function S() return ns.db.settings end
 
 local win = CreateFrame("Frame", "HuntersJournalSettings", UIParent)
-win:SetSize(COL_W * 2 + 72, 660)
+win:SetSize(COL_W * 2 + 72, 760)
 win:SetPoint("CENTER", 0, 20)
 win:SetFrameStrata("DIALOG")
 win:SetToplevel(true)
@@ -242,9 +242,20 @@ Slider(R, "Map button: move up / down", "mapBtnY", -400, 0, 2, px, mapBtn)
 Header(R, "POP-UPS AND ROLEPLAY")
 Check(R, "Research level-up pop-ups", "toasts")
 Check(R, "Pop-up sound", "toastSound")
+Btn(R, "Show a test pop-up (shift-drag to move it)", function() if ns.TestToast then ns.TestToast() end end)
+Btn(R, "Reset pop-up position", function()
+  S().toastPos = nil
+  if ns.PlaceToast then ns.PlaceToast() end
+  ns.Print("research pop-up back in its usual spot.")
+end)
 Check(R, "Offer an RP emote on research level-up", "rpAuto")
 Check(R, "Write field observations into my notes", "autoObs")
 Header(R, "DATA")
+Choice(R, "Journal kept", "scope", { { "account", "Shared by all characters" }, { "character", "One per character" } }, function()
+  if ns.SetScope then ns.SetScope(S().scope) end
+  ns.Print(S().scope == "character" and "this character now keeps its own journal (it started with a copy of the shared one)."
+    or "all characters now share one journal.")
+end)
 local wipeBtn
 wipeBtn = Btn(R, "Wipe the journal...", function()
   if wipeBtn.armed then

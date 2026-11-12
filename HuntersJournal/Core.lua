@@ -140,12 +140,58 @@ end
 local db
 ns.db = nil
 
+-- The journal itself (entries, names) is account-wide or per character;
+-- settings are always account-wide. `db` is a view onto whichever is in use,
+-- so the rest of the addon just reads db.entries / db.names / db.settings.
+local view = {}
+
+local function Copy(t)
+  if type(t) ~= "table" then return t end
+  local c = {}
+  for k, v in pairs(t) do c[k] = Copy(v) end
+  return c
+end
+
+local function UseScope()
+  local acct, char = HuntersJournalDB, HuntersJournalCharDB
+  local src = (acct.settings.scope == "character") and char or acct
+  view.entries, view.names, view.settings = src.entries, src.names, acct.settings
+end
+
+-- switch between one shared journal and one per character. The character
+-- that switches to "per character" starts with a copy of the shared journal
+-- (so nothing is lost); other characters start fresh. The shared journal is
+-- never changed by switching.
+function ns.SetScope(scope)
+  local acct, char = HuntersJournalDB, HuntersJournalCharDB
+  if scope == "character" and not char.seeded then
+    char.seeded = true
+    if not next(char.entries) then
+      char.entries = Copy(acct.entries)
+      char.names = Copy(acct.names)
+    end
+  end
+  acct.settings.scope = scope
+  UseScope()
+  if ns.ForceRefresh then ns.ForceRefresh() end
+  if ns.RefreshPlates then ns.RefreshPlates() end
+  if ns.RefreshMapPins then ns.RefreshMapPins() end
+end
+
 local function InitDB()
   HuntersJournalDB = HuntersJournalDB or {}
-  db = HuntersJournalDB
-  db.entries = db.entries or {}
-  db.names = db.names or {}
-  db.settings = db.settings or {}
+  HuntersJournalCharDB = HuntersJournalCharDB or {}
+  local acct = HuntersJournalDB
+  acct.entries = acct.entries or {}
+  acct.names = acct.names or {}
+  acct.settings = acct.settings or {}
+  HuntersJournalCharDB.entries = HuntersJournalCharDB.entries or {}
+  HuntersJournalCharDB.names = HuntersJournalCharDB.names or {}
+  if acct.settings.scope == nil then acct.settings.scope = "account" end
+  -- a character playing for the first time in per-character mode starts fresh
+  if acct.settings.scope == "character" then HuntersJournalCharDB.seeded = true end
+  UseScope()
+  db = view
   if db.settings.toasts == nil then db.settings.toasts = true end
   if db.settings.minimap == nil then db.settings.minimap = 200 end
   if db.settings.plates == nil then db.settings.plates = true end
@@ -694,6 +740,8 @@ SlashCmdList.HUNTERSJOURNAL = function(msg)
     Print("debug messages " .. (DEBUG and "on - kills, loot and observations print to chat" or "off"))
   elseif cmd == "map" then
     if ns.ToggleMapPins then ns.ToggleMapPins() end
+  elseif cmd == "movetoast" then
+    if ns.TestToast then ns.TestToast() end
   elseif cmd == "toasts" then
     db.settings.toasts = not db.settings.toasts
     Print("research pop-ups " .. (db.settings.toasts and "on" or "off"))
@@ -727,6 +775,7 @@ SlashCmdList.HUNTERSJOURNAL = function(msg)
     print("  /hj plates 10 - move the pips up (or -10 down)")
     print("  /hj tooltip - journal line in tooltips on/off")
     print("  /hj toasts - research pop-ups on/off")
+    print("  /hj movetoast - show a pop-up to shift-drag into place")
     print("  /hj minimap - minimap button on/off")
     print("  /hj reset - wipe the journal")
   end

@@ -48,7 +48,8 @@ local function Apply(fs, fromWrite)
   if not unit or fs.__wmBusy then return end
   local okE, exists = pcall(UnitExists, unit)
   if not (okE and S(exists)) then return end
-  local enabled = (unit == "target") and ns.db.settings.targetFrame or ns.db.settings.plates
+  local enabled
+  if unit:find("^nameplate") then enabled = ns.db.settings.plates else enabled = ns.db.settings.targetFrame end
   local hide = enabled and not ns.IsKnownUnit(unit)
   local T = fs.__wmTrace and ns.Print
   if T then
@@ -156,7 +157,12 @@ local function AttachFrame(frame, unit)
   if type(name) ~= "string" or name == "" then return end
   local list = {}
   Collect(frame, name, list, 0)
-  byUnit[unit] = list
+  byUnit[unit] = byUnit[unit] or {}
+  for _, fs in ipairs(list) do
+    local seen = false
+    for _, x in ipairs(byUnit[unit]) do if x == fs then seen = true break end end
+    if not seen then table.insert(byUnit[unit], fs) end
+  end
   for _, fs in ipairs(list) do
     Guard(fs)
     fs.__wmUnit = unit
@@ -189,8 +195,30 @@ local function Attach(unit)
 end
 
 -- your target frame: EllesmereUI's, or Blizzard's
+-- unit frames from EllesmereUI, GW2 UI and Blizzard, by the unit they show
+local UNIT_FRAMES = {
+  target = { "EllesmereUIUnitFrames_Target", "GwTargetUnitFrame", "TargetFrame" },
+  targettarget = { "EllesmereUIUnitFrames_TargetTarget", "GwTargetTargetUnitFrame", "TargetFrameToT" },
+  focus = { "EllesmereUIUnitFrames_Focus", "GwFocusUnitFrame", "FocusFrame" },
+  focustarget = { "EllesmereUIUnitFrames_FocusTarget", "GwFocusTargetUnitFrame", "FocusFrameToT" },
+}
+
+local function Shown(f)
+  local ok, v = pcall(function() return f:IsVisible() end)
+  return ok and v
+end
+
+-- the target frame you actually see (the introduce button sits on it)
 local function TargetFrameObj()
-  return _G.EllesmereUIUnitFrames_Target or _G.TargetFrame
+  local first
+  for _, n in ipairs(UNIT_FRAMES.target) do
+    local f = _G[n]
+    if f then
+      first = first or f
+      if Shown(f) then return f end
+    end
+  end
+  return first
 end
 ns.TargetFrameObj = TargetFrameObj
 
@@ -247,12 +275,24 @@ local function AttachZones(frame)
   return true
 end
 
+local function AttachUnitFrames(unit)
+  if not ns.db or not ns.db.settings.targetFrame then return end
+  local okE, exists = pcall(UnitExists, unit)
+  if not (okE and S(exists)) then return end
+  for _, n in ipairs(UNIT_FRAMES[unit]) do
+    local f = _G[n]
+    if f and not (unit == "target" and AttachZones(f)) then -- EllesmereUI's target frame has its own path
+      AttachFrame(f, unit)
+    end
+  end
+end
+
 local function AttachTarget()
   if not ns.db then return end
-  local tf = TargetFrameObj()
-  if not tf then return end
-  if AttachZones(tf) then return end -- EllesmereUI
-  if ns.db.settings.targetFrame then AttachFrame(tf, "target") end
+  AttachUnitFrames("target")
+  AttachUnitFrames("targettarget")
+  AttachUnitFrames("focus")
+  AttachUnitFrames("focustarget")
 end
 
 local function Detach(unit)
@@ -402,6 +442,8 @@ ev:RegisterEvent("UNIT_NAME_UPDATE")
 ev:RegisterEvent("GROUP_ROSTER_UPDATE")
 ev:RegisterEvent("PLAYER_REGEN_ENABLED")
 ev:RegisterEvent("PLAYER_TARGET_CHANGED")
+ev:RegisterEvent("PLAYER_FOCUS_CHANGED")
+ev:RegisterEvent("UNIT_TARGET")
 ev:RegisterEvent("PLAYER_ENTERING_WORLD")
 ev:RegisterEvent("VARIABLES_LOADED")
 ev:RegisterEvent("CVAR_UPDATE")
@@ -415,6 +457,9 @@ ev:SetScript("OnEvent", function(_, event, unit)
     Detach(unit)
   elseif event == "UNIT_NAME_UPDATE" then
     if type(unit) == "string" and unit:find("^nameplate") then C_Timer.After(0, function() Attach(unit) end) end
+  elseif event == "PLAYER_FOCUS_CHANGED" or (event == "UNIT_TARGET" and (unit == "target" or unit == "focus")) then
+    C_Timer.After(0, AttachTarget)
+    C_Timer.After(0.2, AttachTarget)
   elseif event == "PLAYER_TARGET_CHANGED" then
     -- the frame's addon writes the new name first, then we look
     C_Timer.After(0, AttachTarget)

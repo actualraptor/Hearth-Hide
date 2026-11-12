@@ -6,7 +6,7 @@
 **Categories:** Bestiary / Data Collection, Roleplay, Hunter, Map & Minimap
 **Logo:** `.github/assets/logo-hj.png`
 **Screenshots:** `hj-overview.jpg` (main), `hj-materials.jpg`, `hj-hogger.jpg`, `hj-toast.jpg`, `hj-chat.jpg`
-**Version:** 1.7.4 · `downloads/HuntersJournal.zip`
+**Version:** 1.8.0 · `downloads/HuntersJournal.zip`
 
 ## Description
 
@@ -30,6 +30,8 @@ Every creature you meet gets a page in a leather-bound field guide. Each kill ra
 - Tame-ability info for beasts, and lore notes for well-known creatures
 - In-character **My Notes**, observations written in your own voice, and a one-click emote when research levels up
 - Leather notebook look with adjustable paper tone, sorting and search
+- One journal shared by all characters, or one per character
+- Shift-drag the research pop-up anywhere
 
 ![Materials](https://raw.githubusercontent.com/actualraptor/hearth-hide/main/.github/assets/hj-materials.jpg)
 

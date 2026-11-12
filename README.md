@@ -55,6 +55,8 @@ Every creature you meet gets a page in a leather-bound field guide. Each kill ra
 - Elites, rares and bosses stand out; research pips appear on nameplates.
 - Hunting grounds on the world map, with the creature's portrait where you've made kills.
 - In-character notes, and a one-click emote when research levels up.
+- Keep one journal for all characters, or one per character.
+- Shift-drag the research pop-up anywhere.
 
 <p>
   <img src=".github/assets/hj-materials.jpg" width="49%" alt="Materials tab with drop rates">
@@ -80,7 +82,7 @@ On an RP server everyone's name hangs over their head. Well Met covers players' 
 - Optional: only hide players who use **Total RP 3**, and show everyone else's name.
 - Tooltips say whether someone uses **Total RP 3** and if they're **in character**.
 - An **introduce button** sits by your target frame and glows while they're a stranger. It sends a line built from your TRP3 profile.
-- Works with Blizzard's frames and **EllesmereUI**.
+- Works with Blizzard's frames, **EllesmereUI** and **GW2 UI**, including target-of-target and focus frames.
 
 <img src=".github/assets/campfire.jpg" alt="A campfire at night. Everyone around it shows only as Gnome woman or Dwarf man." width="100%">
 
