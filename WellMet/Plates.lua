@@ -131,11 +131,14 @@ end
 -- font strings anywhere under `frame` whose text contains `name`
 local function Collect(frame, name, out, depth)
   if not frame or depth > 6 then return end
+  -- some frames (secure or protected pieces) can't be looked inside: skip them
   local okF, forbidden = pcall(function() return frame.IsForbidden and frame:IsForbidden() end)
-  if okF and forbidden then return end
-  local regions = { frame:GetRegions() }
+  if not okF or forbidden then return end
+  local okR, regions = pcall(function() return { frame:GetRegions() } end)
+  if not okR then return end
   for _, r in ipairs(regions) do
-    if r.GetObjectType and r:GetObjectType() == "FontString" then
+    local okO, kind = pcall(function() return r.GetObjectType and r:GetObjectType() end)
+    if okO and kind == "FontString" then
       local okT, t = pcall(r.GetText, r)
       t = okT and S(t)
       if (type(t) == "string" and t:find(name, 1, true)) or r.__wmUnit then
@@ -143,7 +146,9 @@ local function Collect(frame, name, out, depth)
       end
     end
   end
-  for _, c in ipairs({ frame:GetChildren() }) do Collect(c, name, out, depth + 1) end
+  local okC, children = pcall(function() return { frame:GetChildren() } end)
+  if not okC then return end
+  for _, c in ipairs(children) do Collect(c, name, out, depth + 1) end
 end
 
 -- watch the name text of a unit shown in `frame` (a nameplate or the target frame)
